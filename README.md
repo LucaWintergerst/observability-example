@@ -46,6 +46,7 @@ output.elasticsearch:
 ```
 
 You can download Filebeat here: https://www.elastic.co/downloads/beats/filebeat
+
 APM-Server, Elasticsearch and Kibana also need to be running. You can find more information about the Elastic Stack [here](https://www.elastic.co/elastic-stack/)
 
 ### Running the Python Services
