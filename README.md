@@ -57,6 +57,13 @@ python 03-app-instrumented-compression.py
 python 04-app-ecs-logging.py
 ```
 
+### Running the Loadgenerator
+The loadgenerator is just a simple bash script that runs a curl request against each service in a loop. 
+
+```
+sh loadgen.sh
+```
+
 
 ### Screenshots of Kibana
 
