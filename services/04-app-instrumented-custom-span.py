@@ -1,4 +1,6 @@
 from flask import Flask
+import os
+from dotenv import load_dotenv
 
 # instrument flask with Elastic APM
 from elasticapm.contrib.flask import ElasticAPM
@@ -9,6 +11,8 @@ import time
 import logging
 import redis
 
+load_dotenv()
+
 # disable the default flask logger
 logger = logging.getLogger('werkzeug')
 logger.setLevel(logging.ERROR)
@@ -16,21 +20,22 @@ logger = logging.getLogger("app")
 logger.setLevel(logging.DEBUG)
 
 # Log to a file
-handler = logging.FileHandler(filename='/tmp/service3.log')
+handler = logging.FileHandler(filename='/tmp/service4.log')
 logger.addHandler(handler)
-
 app = Flask(__name__)
 
-server_url = 'https://community-conference.apm.us-central1.gcp.cloud.es.io'
-service_name = '03-app-instrumented-compression'
-environment = 'dev'
-# this is just an example token - please replace with your token that you get from Elastic Cloud or your APM Server
-token = 'if0SfRh1EhBu7UiBru'
-apm = ElasticAPM(app, server_url=server_url, service_name=service_name, environment=environment,
-                 secret_token=token, span_compression_enabled=True)
-client = elasticapm.get_client()
+app.config['ELASTIC_APM'] = {
+    'SERVER_URL': os.environ["SERVER_URL"],
+    'SERVICE_NAME': '04-app-instrumented-custom-span',
+    'SECRET_TOKEN': os.environ["SECRET_TOKEN"],
+    'ENVIRONMENT':  'dev'
+}
+apm = ElasticAPM(app)
+
+apm_client = elasticapm.get_client()
 
 r = redis.Redis(host='localhost', port=6379, db=0)
+r.ping()
 
 # redis, slow and fast requests
 @app.route("/endpoint1")
@@ -56,12 +61,17 @@ def endpoint1():
         # we fail for 10% of all requests
         if random.randint(0, 9) < 1:
             time.sleep(0.1)
-            raise RuntimeError('Failed to do something')
+            raise RuntimeError('expected error, will be handled')
     except Exception as e:
         logger.error(e)
-        client.capture_exception()
+        apm_client.capture_exception(handled=True)
         elasticapm.set_transaction_outcome(outcome='failure')
+        return "endpoint1, error"
 
-    return "Redis and slow and fast"
+    if random.randint(0, 9) < 1:
+        time.sleep(0.1)
+        raise RuntimeError('unexpected error')
 
-app.run(host='0.0.0.0', port=5003)
+    return "endpoint1"
+
+app.run(host='0.0.0.0', port=5004)

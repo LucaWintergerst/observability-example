@@ -8,7 +8,17 @@ This repo contains a small python service using flask. The service is available 
 
 3 - with a more advanced Elastic APM instrumentation
 
-4 - with full instrumentation and ECS logging
+4 - with custom spans
+
+5 - with custom context
+
+6 - with ECS logging
+
+7 - calling second service, showing distributed tracing
+
+8 - calling third service, showing distributed tracing
+
+11 - instrumented with OTEL instead of Elastic APM
 
 ### Requirements
 Redis is required for the services to run.
@@ -31,11 +41,16 @@ pip install -r requirements.txt
 
 Before running the services, make sure you provide the following endpoints and credentials:
 ```
-APM:
-server_url
-token
+.env: 
 
-Filebeat: 
+SECRET_TOKEN
+SERVER_URL
+OTEL_EXPORTER_OTLP_ENDPOINT
+OTEL_EXPORTER_OTLP_HEADERS
+
+
+filebeat.yml:
+ 
 cloud.id: deploymentname:secret123
 cloud.auth: elastic:secret123
 or 
@@ -49,22 +64,11 @@ You can download Filebeat here: https://www.elastic.co/downloads/beats/filebeat
 
 APM-Server, Elasticsearch and Kibana also need to be running. You can find more information about the Elastic Stack [here](https://www.elastic.co/elastic-stack/)
 
-### Running the Python Services
+### Running the Python Services and loadgen:
 To run the python services, execute the following command for the file you'd like to run:
-```
-python 01-app-uninstrumented.py
-python 02-app-instrumented.py
-python 03-app-instrumented-compression.py
-python 04-app-ecs-logging.py
-```
-
-### Running the Loadgenerator
-The loadgenerator is just a simple bash script that runs a curl request against each service in a loop. 
-
 ```
 sh loadgen.sh
 ```
-
 
 ### Screenshots of Kibana
 
