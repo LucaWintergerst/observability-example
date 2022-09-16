@@ -1,7 +1,7 @@
 filebeat.inputs:
 - type: filestream
   paths:
-    - /tmp/service4.log
+    - /tmp/service*.log
 
 cloud.id: deploymentname:secret123
 cloud.auth: elastic:secret123

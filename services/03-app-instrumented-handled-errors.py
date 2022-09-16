@@ -2,6 +2,9 @@ from flask import Flask
 import os
 from dotenv import load_dotenv
 
+# instrument flask with Elastic APM
+from elasticapm.contrib.flask import ElasticAPM
+import elasticapm
 import random
 import time
 
@@ -17,9 +20,19 @@ logger = logging.getLogger("app")
 logger.setLevel(logging.DEBUG)
 
 # Log to a file
-handler = logging.FileHandler(filename='/tmp/service1.log')
+handler = logging.FileHandler(filename='/tmp/service3.log')
 logger.addHandler(handler)
 app = Flask(__name__)
+
+app.config['ELASTIC_APM'] = {
+    'SERVER_URL': os.environ["SERVER_URL"],
+    'SERVICE_NAME': '03-app-instrumented-handled-errors',
+    'SECRET_TOKEN': os.environ["SECRET_TOKEN"],
+    'ENVIRONMENT':  'dev'
+}
+apm = ElasticAPM(app)
+
+apm_client = elasticapm.get_client()
 
 r = redis.Redis(host='localhost', port=6379, db=0)
 r.ping()
@@ -48,6 +61,8 @@ def endpoint1():
             raise RuntimeError('expected error, will be handled')
     except Exception as e:
         logger.error(e)
+        apm_client.capture_exception(handled=True)
+        elasticapm.set_transaction_outcome(outcome='failure')
         return "endpoint1, error"
 
     if random.randint(0, 9) < 1:
@@ -56,4 +71,4 @@ def endpoint1():
 
     return "endpoint1"
 
-app.run(host='0.0.0.0', port=5001)
+app.run(host='0.0.0.0', port=5003)
